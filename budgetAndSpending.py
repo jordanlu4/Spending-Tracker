@@ -27,12 +27,11 @@ class Budget:
         else:
             print(f"Remaining Budget: ${self.remainingBudget:.2f}")
     
-def update_budget_with_transactions(budget_manager, transactions):
-    """Updates the budget based on a list of transactions (list_nodes)."""
+def update_budget_with_transactions(budget, transactions):
     for transaction in transactions:
-        budget_manager.addSpending(transaction.price)
+        budget.addSpending(transaction.price)
 
 
-# budget = Budget(1000)
-# update_budget_with_transactions(budget, list_nodes)
-# budget.display_status()
+budget = Budget(1000)
+update_budget_with_transactions(budget, list_nodes)
+budget.display_status()

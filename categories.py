@@ -4,7 +4,7 @@ from datetime import datetime
 
 class treeNode:
     def __init__(self, date, category, item, price):
-        self.date = date
+        self.date = datetime.strptime(date, '%m-%d-%Y')  # Now date is a datetime object
         self.category = category
         self.item = item
         self.price = price
@@ -135,7 +135,7 @@ class dateList:
 # test_dateList_with_extracted_nodes(list_nodes)
 
 
-class priceTree: #Use BST for price
+class priceTree:  # Use BST for price
     def __init__(self, treeNode=None):
         self.root = treeNode
 
@@ -146,33 +146,68 @@ class priceTree: #Use BST for price
             self.insertHelper(self.root, newNode)
 
     def insertHelper(self, root, newNode):
-        while root is not None:
-            # Compare prices to determine left or right insertion
+        insert_left = True  # Initialize the flag outside the loop
+        while True:
             if newNode.price < root.price:
-                # Go to the left subtree if the new node's price is less
                 if root.left is None:
                     root.left = newNode
                     break
                 else:
                     root = root.left
-            else:
-                # Go to the right subtree if the new node's price is more or equal
+            elif newNode.price > root.price:
                 if root.right is None:
                     root.right = newNode
                     break
                 else:
                     root = root.right
+            else:
+                if newNode.date < root.date:
+                    if root.left is None:
+                        root.left = newNode
+                        break
+                    else:
+                        root = root.left
+                elif newNode.date > root.date:
+                    if root.right is None:
+                        root.right = newNode
+                        break
+                    else:
+                        root = root.right
+                else:
+                    if insert_left:
+                        if root.left is None:
+                            root.left = newNode
+                            break
+                        else:
+                            root = root.left
+                    else:
+                        if root.right is None:
+                            root.right = newNode
+                            break
+                        else:
+                            root = root.right
+                    insert_left = not insert_left  # Alternate for next duplicate
 
     def in_order_traversal(self):
-        return self._in_order_recursive(self.root)
-
-    def _in_order_recursive(self, current_node):
         result = []
-        if current_node is not None:
-            result.extend(self._in_order_recursive(current_node.left))
-            result.append(current_node)
-            result.extend(self._in_order_recursive(current_node.right))
+        stack = []
+        current = self.root
+
+        while True:
+            if current is not None:
+                stack.append(current)
+                current = current.left
+            elif stack:
+                current = stack.pop()
+                # print(f"Visiting node with price: {current.price}, date: {current.date}")  # Debugging statement
+                result.append(current)
+                current = current.right
+            else:
+                break
         return result
+
+
+
 
 # def test_priceTree_with_extracted_nodes(extracted_nodes):
 #     price_tree = priceTree()
@@ -190,20 +225,25 @@ class priceTree: #Use BST for price
 
 class categoriesDict:
     def __init__(self):
+        # Store categories in lowercase to avoid case mismatch
         self.categories = {
-            "Living": [],
-            "Food": [],
-            "Entertainment": []
+            "living": [],
+            "food": [],
+            "entertainment": []
         }
 
     def addNode(self, newNode):
-        if newNode.category in self.categories:
-            self.categories[newNode.category].append(newNode)
+        # Convert category to lowercase to match the keys in self.categories
+        category = newNode.category.lower().strip()  # Standardize the category name
+        if category in self.categories:
+            self.categories[category].append(newNode)
         else:
-            print(f"{newNode.category} not recognized")
-    
+            print(f"{newNode.category} not recognized")  # Print the original category
+
     def getCategory(self, category):
-        return self.categories.get(category, [])
+        # Convert the input category to lowercase to match how it's stored
+        return self.categories.get(category.lower(), [])
+
 
 # def test_categoriesDict_with_extracted_nodes(list_nodes):
 #     catDict = categoriesDict()
@@ -251,3 +291,48 @@ class itemsList:
 
 # # Example usage: Assuming list_nodes is a list of listNode instances.
 # test_item_sorter_with_extracted_nodes(list_nodes)
+
+# Sorting by Category
+def sort_by_category():
+    catDict = categoriesDict()
+    for node in list_nodes:
+        catDict.addNode(node)
+
+    for category in ["Living", "Food", "Entertainment"]:
+        category_nodes = catDict.getCategory(category)
+        result = [f"{node.date.strftime('%m-%d-%Y')}: {node.item} - ${node.price}" for node in category_nodes]
+        print(f"\n=== {category.capitalize()} Transactions ===")
+        print("\n".join(result))
+
+# Sorting by Price using priceTree
+def sort_by_price(tree_nodes):
+    price_tree = priceTree()
+    for node in tree_nodes:
+        price_tree.insert(node)
+
+    sorted_nodes = price_tree.in_order_traversal()
+    result = [f"{node.date.strftime('%m-%d-%Y')}: {node.item} - ${node.price}" for node in sorted_nodes]
+    print("\n=== Transactions Sorted by Price ===")
+    print("\n".join(result))
+
+# Sorting by Date using dateList
+def sort_by_date():
+    date_list = dateList()
+    for node in list_nodes:
+        date_list.insert(node)
+
+    sorted_nodes = date_list.traverseList(date_list.head)
+    result = [f"{node.date.strftime('%m-%d-%Y')}: {node.item} - ${node.price}" for node in sorted_nodes]
+    print("\n=== Transactions Sorted by Date ===")
+    print("\n".join(result))
+
+# Sorting by Item using itemsList
+def sort_by_item():
+    item_list = itemsList()
+    for node in list_nodes:
+        item_list.addItem(node)
+
+    sorted_items = item_list.get_sorted_items()
+    result = [f"{node.date.strftime('%m-%d-%Y')}: {node.item} - ${node.price}" for node in sorted_items]
+    print("\n=== Transactions Sorted by Item ===")
+    print("\n".join(result))
